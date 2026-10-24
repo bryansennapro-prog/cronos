@@ -3,7 +3,7 @@
   e, com -Upload, envia para o R2 (servido pelo Worker em /updates).
 
   Exemplos:
-    .\scripts\release.ps1 -Version 0.6.0 -Upload        # publica para o painel instalado se atualizar sozinho
+    .\scripts\release.ps1 -Version 0.7.1 -Upload        # publica para o painel instalado se atualizar sozinho
     .\scripts\release.ps1 -Version 0.6.1 -OutDir C:\tmp\teste -PackId InstaPanelAppTeste -Shortcuts None # teste local
 
   O instalador fica em: <OutDir>\releases\<PackId>-win-Setup.exe
@@ -13,16 +13,20 @@ param(
   [Parameter(Mandatory)] [string]$Version,
   [string]$PackId = 'InstaPanelApp',      # ≠ "InstaPanel": a pasta de instalação não pode ser a pasta de dados
   [string]$Channel = 'win',
-  [string]$OutDir = (Join-Path (Split-Path $PSScriptRoot) 'out'),
+  [string]$OutDir,                        # padrão: desktop\out
   [string]$Shortcuts = 'Desktop,StartMenuRoot',
-  [string]$WorkerDir = (Join-Path (Split-Path (Split-Path $PSScriptRoot)) 'worker'),
+  [string]$WorkerDir,                     # padrão: ..\worker
   [string]$Bucket = 'instapanel-media',
   [string]$FeedUrl = 'https://instapanel.instapanel-worker.workers.dev/updates',
   [switch]$Upload
 )
 $ErrorActionPreference = 'Stop'
 $env:Path = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + [Environment]::GetEnvironmentVariable('Path', 'User') + ";$env:USERPROFILE\.dotnet\tools"
+# No PowerShell 5.1, $PSScriptRoot fica vazio nos valores padrão do param() de scripts com [Parameter()];
+# por isso as pastas padrão são resolvidas aqui, no corpo do script.
 $root = Split-Path $PSScriptRoot
+if (-not $OutDir) { $OutDir = Join-Path $root 'out' }
+if (-not $WorkerDir) { $WorkerDir = Join-Path (Split-Path $root) 'worker' }
 $releases = Join-Path $OutDir 'releases'
 New-Item -ItemType Directory -Force $releases | Out-Null
 

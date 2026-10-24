@@ -5,7 +5,7 @@
     <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
     <RootNamespace>InstaPanel.App</RootNamespace>
     <AssemblyName>InstaPanel</AssemblyName>
-    <Version>0.7.0</Version>
+    <Version>0.7.1</Version>
     <!-- Main próprio (Program.cs): o Velopack precisa rodar antes do WinUI para tratar instalação/atualização. -->
     <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
     <ApplicationManifest>app.manifest</ApplicationManifest>
