@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentDialog
+    x:Class="InstaPanel.App.Dialogs.PostDetailsDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:InstaPanel.App.Controls"
+    CloseButtonText="Fechar"
+    DefaultButton="Close"
+    PrimaryButtonClick="Save_Click"
+    SecondaryButtonClick="Cancel_Click"
+    Style="{StaticResource DefaultContentDialogStyle}">
+
+    <ScrollViewer MaxHeight="560" VerticalScrollBarVisibility="Auto">
+        <StackPanel MinWidth="440" Spacing="14">
+            <Grid ColumnSpacing="14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border
+                    Width="72"
+                    Height="90"
+                    Background="{ThemeResource ControlFillColorSecondaryBrush}"
+                    CornerRadius="6">
+                    <Grid>
+                        <Image x:Name="Thumb" Stretch="UniformToFill" />
+                        <FontIcon
+                            x:Name="TypeIcon"
+                            FontSize="22"
+                            Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                    </Grid>
+                </Border>
+                <StackPanel Grid.Column="1" Spacing="4">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock x:Name="TypeText" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                        <Border
+                            x:Name="StateBadge"
+                            Padding="8,1"
+                            CornerRadius="10">
+                            <TextBlock
+                                x:Name="StateText"
+                                FontSize="12"
+                                FontWeight="SemiBold"
+                                Foreground="Black" />
+                        </Border>
+                    </StackPanel>
+                    <TextBlock x:Name="WhenText" TextWrapping="Wrap" />
+                    <HyperlinkButton
+                        x:Name="PermalinkLink"
+                        Padding="0"
+                        Content="Ver no Instagram"
+                        Visibility="Collapsed" />
+                </StackPanel>
+            </Grid>
+
+            <InfoBar
+                x:Name="ErrorBar"
+                Title="Motivo da falha"
+                IsClosable="False"
+                Severity="Error">
+                <InfoBar.ActionButton>
+                    <Button
+                        x:Name="RetryButton"
+                        Click="Retry_Click"
+                        Content="Tentar agora" />
+                </InfoBar.ActionButton>
+            </InfoBar>
+
+            <!--  Edição (posts ainda não publicados)  -->
+            <StackPanel x:Name="EditPanel" Spacing="12">
+                <controls:DateTimeField x:Name="When" ShowQuickPicks="False" />
+                <StackPanel Spacing="4">
+                    <TextBox
+                        x:Name="CaptionBox"
+                        Height="140"
+                        AcceptsReturn="True"
+                        Header="Legenda"
+                        TextChanged="CaptionBox_TextChanged"
+                        TextWrapping="Wrap" />
+                    <TextBlock x:Name="CaptionCounter" Style="{StaticResource CaptionTextBlockStyle}" />
+                </StackPanel>
+            </StackPanel>
+
+            <!--  Leitura (publicados/cancelados)  -->
+            <TextBlock
+                x:Name="CaptionReadOnly"
+                IsTextSelectionEnabled="True"
+                TextWrapping="Wrap" />
+
+            <InfoBar
+                x:Name="ActionError"
+                IsClosable="True"
+                Severity="Error" />
+
+            <Expander
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Stretch"
+                Header="Linha do tempo">
+                <StackPanel x:Name="EventsPanel" Spacing="6" />
+            </Expander>
+        </StackPanel>
+    </ScrollViewer>
+</ContentDialog>

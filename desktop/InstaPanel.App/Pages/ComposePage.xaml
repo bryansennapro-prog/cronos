@@ -1,0 +1,522 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="InstaPanel.App.Pages.ComposePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:InstaPanel.App.ViewModels"
+    NavigationCacheMode="Required">
+
+    <Page.Resources>
+        <DataTemplate x:Key="PickerItemTemplate" x:DataType="vm:MediaItemViewModel">
+            <Grid
+                Width="120"
+                AutomationProperties.Name="{x:Bind FileName}"
+                RowSpacing="4"
+                ToolTipService.ToolTip="{x:Bind DetailsText}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="160" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Border Background="{ThemeResource ControlFillColorSecondaryBrush}" CornerRadius="6">
+                    <Grid>
+                        <Image Source="{x:Bind Thumbnail}" Stretch="UniformToFill" />
+                        <Border
+                            Margin="4"
+                            Padding="4,1"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Bottom"
+                            Background="#B0000000"
+                            CornerRadius="3">
+                            <TextBlock
+                                FontSize="10"
+                                Foreground="White"
+                                Text="{x:Bind KindLabel}" />
+                        </Border>
+                    </Grid>
+                </Border>
+                <TextBlock
+                    Grid.Row="1"
+                    Style="{StaticResource CaptionTextBlockStyle}"
+                    Text="{x:Bind FileName}"
+                    TextTrimming="CharacterEllipsis" />
+            </Grid>
+        </DataTemplate>
+    </Page.Resources>
+
+    <ScrollViewer>
+        <!--  Janela larga: prévia ao lado. Estreita: prévia embaixo do editor.  -->
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState x:Name="Wide">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="1320" />
+                    </VisualState.StateTriggers>
+                </VisualState>
+                <VisualState x:Name="Narrow">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter Target="PreviewPanel.(Grid.Column)" Value="0" />
+                        <Setter Target="PreviewPanel.(Grid.Row)" Value="1" />
+                        <Setter Target="PreviewPanel.Margin" Value="0,24,0,0" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+        <Grid
+            Padding="36,24,36,36"
+            HorizontalAlignment="Left"
+            ColumnSpacing="32">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" MinWidth="420" MaxWidth="640" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!--  Editor  -->
+            <StackPanel Spacing="4">
+                <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="Novo post" />
+
+                <!--  Formato  -->
+                <SelectorBar
+                    x:Name="KindBar"
+                    Margin="-12,8,0,0"
+                    IsEnabled="{x:Bind ViewModel.IsEditing, Mode=OneWay}"
+                    SelectionChanged="KindBar_SelectionChanged">
+                    <SelectorBarItem
+                        IsSelected="True"
+                        Tag="Image"
+                        Text="Post">
+                        <SelectorBarItem.Icon>
+                            <FontIcon Glyph="&#xE91B;" />
+                        </SelectorBarItem.Icon>
+                    </SelectorBarItem>
+                    <SelectorBarItem Tag="Carousel" Text="Carrossel">
+                        <SelectorBarItem.Icon>
+                            <FontIcon Glyph="&#xE8B9;" />
+                        </SelectorBarItem.Icon>
+                    </SelectorBarItem>
+                    <SelectorBarItem Tag="Reel" Text="Reel">
+                        <SelectorBarItem.Icon>
+                            <FontIcon Glyph="&#xE714;" />
+                        </SelectorBarItem.Icon>
+                    </SelectorBarItem>
+                    <SelectorBarItem Tag="Story" Text="Story">
+                        <SelectorBarItem.Icon>
+                            <FontIcon Glyph="&#xEA3A;" />
+                        </SelectorBarItem.Icon>
+                    </SelectorBarItem>
+                </SelectorBar>
+                <TextBlock
+                    Style="{StaticResource CardCaptionStyle}"
+                    Text="{x:Bind ViewModel.KindHint, Mode=OneWay}"
+                    TextWrapping="Wrap" />
+
+                <!--  Mídia  -->
+                <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Mídia" />
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel Spacing="12">
+                        <ItemsControl ItemsSource="{x:Bind ViewModel.Items}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:ComposeMediaViewModel">
+                                    <Grid
+                                        Margin="0,0,0,10"
+                                        AutomationProperties.Name="{x:Bind FileName}"
+                                        ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid>
+                                            <Border
+                                                Width="56"
+                                                Height="70"
+                                                Background="{ThemeResource ControlFillColorSecondaryBrush}"
+                                                CornerRadius="6">
+                                                <Image Source="{x:Bind Thumbnail}" Stretch="UniformToFill" />
+                                            </Border>
+                                            <Border
+                                                MinWidth="20"
+                                                Height="20"
+                                                Margin="-6,-6,0,0"
+                                                HorizontalAlignment="Left"
+                                                VerticalAlignment="Top"
+                                                Background="{ThemeResource AccentFillColorDefaultBrush}"
+                                                CornerRadius="10"
+                                                Visibility="{x:Bind ShowPosition}">
+                                                <TextBlock
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    FontSize="11"
+                                                    FontWeight="SemiBold"
+                                                    Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"
+                                                    Text="{x:Bind PositionText}" />
+                                            </Border>
+                                        </Grid>
+                                        <StackPanel
+                                            Grid.Column="1"
+                                            VerticalAlignment="Center"
+                                            Spacing="2">
+                                            <TextBlock
+                                                Style="{StaticResource BodyStrongTextBlockStyle}"
+                                                Text="{x:Bind FileName}"
+                                                TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Style="{StaticResource CardCaptionStyle}" Text="{x:Bind DetailsText}" />
+                                            <Grid ColumnSpacing="6" ToolTipService.ToolTip="{x:Bind CompatText}">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <FontIcon
+                                                    Margin="0,2,0,0"
+                                                    VerticalAlignment="Top"
+                                                    FontSize="12"
+                                                    Foreground="{x:Bind CompatBrush}"
+                                                    Glyph="{x:Bind CompatGlyph}" />
+                                                <TextBlock
+                                                    Grid.Column="1"
+                                                    MaxLines="2"
+                                                    Style="{StaticResource CaptionTextBlockStyle}"
+                                                    Text="{x:Bind CompatText}"
+                                                    TextTrimming="CharacterEllipsis"
+                                                    TextWrapping="Wrap" />
+                                            </Grid>
+                                        </StackPanel>
+                                        <StackPanel
+                                            Grid.Column="2"
+                                            VerticalAlignment="Center"
+                                            Orientation="Horizontal"
+                                            Spacing="2">
+                                            <Button
+                                                AutomationProperties.Name="Mover para cima"
+                                                Click="MoveUp_Click"
+                                                IsEnabled="{x:Bind CanMoveUp}"
+                                                Style="{StaticResource SubtleButtonStyle}"
+                                                Tag="{x:Bind}"
+                                                ToolTipService.ToolTip="Mover para cima"
+                                                Visibility="{x:Bind ShowPosition}">
+                                                <FontIcon FontSize="12" Glyph="&#xE70E;" />
+                                            </Button>
+                                            <Button
+                                                AutomationProperties.Name="Mover para baixo"
+                                                Click="MoveDown_Click"
+                                                IsEnabled="{x:Bind CanMoveDown}"
+                                                Style="{StaticResource SubtleButtonStyle}"
+                                                Tag="{x:Bind}"
+                                                ToolTipService.ToolTip="Mover para baixo"
+                                                Visibility="{x:Bind ShowPosition}">
+                                                <FontIcon FontSize="12" Glyph="&#xE70D;" />
+                                            </Button>
+                                            <Button
+                                                AutomationProperties.Name="Remover"
+                                                Click="Remove_Click"
+                                                Style="{StaticResource SubtleButtonStyle}"
+                                                Tag="{x:Bind}"
+                                                ToolTipService.ToolTip="Remover">
+                                                <FontIcon FontSize="12" Glyph="&#xE711;" />
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <Button
+                            AutomationProperties.Name="{x:Bind ViewModel.AddButtonText, Mode=OneWay}"
+                            Click="ChooseMedia_Click"
+                            IsEnabled="{x:Bind ViewModel.CanAddMore, Mode=OneWay}"
+                            Style="{StaticResource AccentButtonStyle}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon FontSize="14" Glyph="&#xE710;" />
+                                <TextBlock Text="{x:Bind ViewModel.AddButtonText, Mode=OneWay}" />
+                            </StackPanel>
+                        </Button>
+
+                        <InfoBar
+                            Title="{x:Bind ViewModel.CompatTitle, Mode=OneWay}"
+                            IsClosable="False"
+                            IsOpen="{x:Bind ViewModel.HasMedia, Mode=OneWay}"
+                            Message="{x:Bind ViewModel.CompatMessage, Mode=OneWay}"
+                            Severity="{x:Bind ViewModel.CompatSeverity, Mode=OneWay}" />
+                    </StackPanel>
+                </Border>
+
+                <!--  Legenda  -->
+                <StackPanel Visibility="{x:Bind ViewModel.CaptionEnabled, Mode=OneWay}">
+                    <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Legenda" />
+                    <Border Style="{StaticResource CardStyle}">
+                        <StackPanel Spacing="6">
+                            <TextBox
+                                Height="180"
+                                AcceptsReturn="True"
+                                AutomationProperties.Name="Legenda"
+                                IsEnabled="{x:Bind ViewModel.IsEditing, Mode=OneWay}"
+                                IsSpellCheckEnabled="True"
+                                PlaceholderText="Escreva a legenda… #hashtags e @menções funcionam normalmente."
+                                Text="{x:Bind ViewModel.Caption, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                TextWrapping="Wrap" />
+                            <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Text="{x:Bind ViewModel.CaptionCounterText, Mode=OneWay}" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!--  Opções do Reel  -->
+                <StackPanel Visibility="{x:Bind ViewModel.IsReel, Mode=OneWay}">
+                    <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Opções do Reel" />
+                    <Border Style="{StaticResource CardStyle}">
+                        <StackPanel Spacing="16">
+                            <ToggleSwitch
+                                Header="Mostrar o Reel também no feed do perfil"
+                                IsEnabled="{x:Bind ViewModel.IsEditing, Mode=OneWay}"
+                                IsOn="{x:Bind ViewModel.ShareToFeed, Mode=TwoWay}"
+                                OffContent="Só na aba Reels"
+                                OnContent="Feed e aba Reels" />
+                            <Grid ColumnSpacing="16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Spacing="6">
+                                    <Slider
+                                        AutomationProperties.Name="Quadro da capa"
+                                        Header="Capa do Reel"
+                                        IsEnabled="{x:Bind ViewModel.IsEditing, Mode=OneWay}"
+                                        Maximum="{x:Bind ViewModel.CoverMax, Mode=OneWay}"
+                                        Minimum="0"
+                                        StepFrequency="0.1"
+                                        Value="{x:Bind ViewModel.CoverSeconds, Mode=TwoWay}" />
+                                    <TextBlock
+                                        Style="{StaticResource CardCaptionStyle}"
+                                        Text="{x:Bind ViewModel.CoverText, Mode=OneWay}"
+                                        TextWrapping="Wrap" />
+                                    <Button
+                                        Command="{x:Bind ViewModel.ResetCoverCommand}"
+                                        Content="Usar capa padrão"
+                                        IsEnabled="{x:Bind ViewModel.CoverChosen, Mode=OneWay}" />
+                                </StackPanel>
+                                <Border
+                                    Grid.Column="1"
+                                    Width="72"
+                                    Height="128"
+                                    Background="{ThemeResource ControlFillColorSecondaryBrush}"
+                                    CornerRadius="6">
+                                    <Image Source="{x:Bind ViewModel.CoverPreview, Mode=OneWay}" Stretch="UniformToFill" />
+                                </Border>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!--  Ações  -->
+                <StackPanel
+                    Margin="0,20,0,0"
+                    Orientation="Horizontal"
+                    Spacing="12">
+                    <Button
+                        AutomationProperties.Name="{x:Bind ViewModel.PublishButtonText, Mode=OneWay}"
+                        Click="Publish_Click"
+                        IsEnabled="{x:Bind ViewModel.CanPublish, Mode=OneWay}"
+                        Style="{StaticResource AccentButtonStyle}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon FontSize="14" Glyph="&#xE724;" />
+                            <TextBlock Text="{x:Bind ViewModel.PublishButtonText, Mode=OneWay}" />
+                        </StackPanel>
+                    </Button>
+                    <Button
+                        AutomationProperties.Name="Agendar"
+                        Click="Schedule_Click"
+                        IsEnabled="{x:Bind ViewModel.CanPublish, Mode=OneWay}"
+                        ToolTipService.ToolTip="Escolher data e horário; a nuvem publica sozinha">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon FontSize="14" Glyph="&#xE787;" />
+                            <TextBlock Text="Agendar" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!--  Progresso da publicação  -->
+                <Border
+                    x:Name="ProgressCard"
+                    Margin="0,16,0,0"
+                    Style="{StaticResource CardStyle}"
+                    Visibility="{x:Bind ViewModel.ShowProgressPanel, Mode=OneWay}">
+                    <StackPanel Spacing="12">
+                        <StackPanel Spacing="8">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <FontIcon FontSize="16" Glyph="{x:Bind ViewModel.PrepareGlyph, Mode=OneWay}" />
+                                <TextBlock Text="Preparar mídia" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <FontIcon FontSize="16" Glyph="{x:Bind ViewModel.UploadGlyph, Mode=OneWay}" />
+                                <TextBlock Text="Enviar para a nuvem" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <FontIcon FontSize="16" Glyph="{x:Bind ViewModel.PublishGlyph, Mode=OneWay}" />
+                                <TextBlock Text="{x:Bind ViewModel.PublishStepLabel, Mode=OneWay}" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <StackPanel Spacing="6" Visibility="{x:Bind ViewModel.IsBusy, Mode=OneWay}">
+                            <TextBlock Text="{x:Bind ViewModel.StepText, Mode=OneWay}" TextWrapping="Wrap" />
+                            <ProgressBar IsIndeterminate="{x:Bind ViewModel.StepIndeterminate, Mode=OneWay}" Value="{x:Bind ViewModel.StepProgress, Mode=OneWay}" />
+                            <Button
+                                Command="{x:Bind ViewModel.CancelCommand}"
+                                Content="Cancelar"
+                                Visibility="{x:Bind ViewModel.CanCancel, Mode=OneWay}" />
+                            <TextBlock
+                                Style="{StaticResource CardCaptionStyle}"
+                                Text="A partir daqui o post segue na nuvem, mesmo se você fechar o painel."
+                                TextWrapping="Wrap"
+                                Visibility="{x:Bind ViewModel.IsPublishingStage, Mode=OneWay}" />
+                        </StackPanel>
+
+                        <InfoBar
+                            Title="{x:Bind ViewModel.DoneTitle, Mode=OneWay}"
+                            IsClosable="False"
+                            IsOpen="{x:Bind ViewModel.IsDone, Mode=OneWay}"
+                            Message="{x:Bind ViewModel.DoneMessage, Mode=OneWay}"
+                            Severity="Success">
+                            <InfoBar.Content>
+                                <StackPanel
+                                    Margin="0,0,0,12"
+                                    Orientation="Horizontal"
+                                    Spacing="8">
+                                    <HyperlinkButton
+                                        Content="Ver no Instagram"
+                                        NavigateUri="{x:Bind ViewModel.PermalinkUri, Mode=OneWay}"
+                                        Visibility="{x:Bind ViewModel.HasPermalink, Mode=OneWay}" />
+                                    <Button
+                                        Click="OpenCalendar_Click"
+                                        Content="Ver no calendário"
+                                        Visibility="{x:Bind ViewModel.WasScheduled, Mode=OneWay}" />
+                                    <Button Command="{x:Bind ViewModel.NewPostCommand}" Content="Novo post" />
+                                </StackPanel>
+                            </InfoBar.Content>
+                        </InfoBar>
+
+                        <InfoBar
+                            Title="Não foi possível publicar"
+                            IsClosable="False"
+                            IsOpen="{x:Bind ViewModel.IsFailed, Mode=OneWay}"
+                            Message="{x:Bind ViewModel.ErrorText, Mode=OneWay}"
+                            Severity="Error">
+                            <InfoBar.Content>
+                                <StackPanel
+                                    Margin="0,0,0,12"
+                                    Orientation="Horizontal"
+                                    Spacing="8">
+                                    <Button Command="{x:Bind ViewModel.RetryCommand}" Content="Tentar de novo" />
+                                    <Button Command="{x:Bind ViewModel.NewPostCommand}" Content="Descartar" />
+                                </StackPanel>
+                            </InfoBar.Content>
+                        </InfoBar>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!--  Prévia estilo celular  -->
+            <StackPanel
+                x:Name="PreviewPanel"
+                Grid.Column="1"
+                HorizontalAlignment="Left"
+                Spacing="8">
+                <TextBlock
+                    Margin="0,8,0,0"
+                    Style="{StaticResource CardCaptionStyle}"
+                    Text="PRÉVIA" />
+                <Border
+                    Width="324"
+                    Padding="12,16"
+                    Background="{ThemeResource LayerFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="28">
+                    <StackPanel Spacing="10">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <PersonPicture
+                                Width="28"
+                                Height="28"
+                                DisplayName="{x:Bind ViewModel.Username, Mode=OneWay}"
+                                ProfilePicture="{x:Bind ViewModel.ProfilePicture, Mode=OneWay}" />
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Style="{StaticResource BodyStrongTextBlockStyle}"
+                                Text="{x:Bind ViewModel.Username, Mode=OneWay}" />
+                        </StackPanel>
+                        <Grid
+                            Width="300"
+                            Height="{x:Bind ViewModel.PreviewHeight, Mode=OneWay}"
+                            Background="{ThemeResource ControlFillColorSecondaryBrush}"
+                            CornerRadius="4">
+                            <Image Source="{x:Bind ViewModel.PreviewImage, Mode=OneWay}" Stretch="UniformToFill" />
+                            <!--  Story: barrinha de progresso no topo  -->
+                            <Border
+                                Height="3"
+                                Margin="8"
+                                VerticalAlignment="Top"
+                                Background="#E0FFFFFF"
+                                CornerRadius="2"
+                                Visibility="{x:Bind ViewModel.IsStory, Mode=OneWay}" />
+                            <FontIcon
+                                FontSize="40"
+                                Foreground="#E0FFFFFF"
+                                Glyph="&#xF5B0;"
+                                Visibility="{x:Bind ViewModel.PreviewIsVideo, Mode=OneWay}" />
+                            <!--  Carrossel: contador e navegação  -->
+                            <Border
+                                Margin="8"
+                                Padding="8,2"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Top"
+                                Background="#B0000000"
+                                CornerRadius="10"
+                                Visibility="{x:Bind ViewModel.IsCarousel, Mode=OneWay}">
+                                <TextBlock
+                                    FontSize="12"
+                                    Foreground="White"
+                                    Text="{x:Bind ViewModel.PreviewCounter, Mode=OneWay}" />
+                            </Border>
+                            <Button
+                                Margin="6"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                AutomationProperties.Name="Item anterior da prévia"
+                                Command="{x:Bind ViewModel.PreviewPreviousCommand}"
+                                Visibility="{x:Bind ViewModel.IsCarousel, Mode=OneWay}">
+                                <FontIcon FontSize="12" Glyph="&#xE76B;" />
+                            </Button>
+                            <Button
+                                Margin="6"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                AutomationProperties.Name="Próximo item da prévia"
+                                Command="{x:Bind ViewModel.PreviewNextCommand}"
+                                Visibility="{x:Bind ViewModel.IsCarousel, Mode=OneWay}">
+                                <FontIcon FontSize="12" Glyph="&#xE76C;" />
+                            </Button>
+                        </Grid>
+                        <StackPanel Visibility="{x:Bind ViewModel.CaptionEnabled, Mode=OneWay}" Spacing="10">
+                            <StackPanel Orientation="Horizontal" Spacing="16">
+                                <FontIcon FontSize="20" Glyph="&#xEB51;" />
+                                <FontIcon FontSize="20" Glyph="&#xE8F2;" />
+                                <FontIcon FontSize="20" Glyph="&#xE724;" />
+                            </StackPanel>
+                            <TextBlock
+                                MaxLines="4"
+                                TextTrimming="CharacterEllipsis"
+                                TextWrapping="Wrap">
+                                <Run FontWeight="SemiBold" Text="{x:Bind ViewModel.Username, Mode=OneWay}" />
+                                <Run Text="{x:Bind ViewModel.PreviewCaption, Mode=OneWay}" />
+                            </TextBlock>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</Page>

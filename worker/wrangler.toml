@@ -1,0 +1,39 @@
+name = "instapanel"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+
+[vars]
+META_GRAPH_BASE = "https://graph.instagram.com"
+META_GRAPH_VERSION = "v24.0"
+PUBLIC_BASE_URL = "https://instapanel.instapanel-worker.workers.dev"
+# "Entrar com Instagram": ID do app do Instagram (Painel da Meta › Instagram › Configuração da API com login
+# do Instagram). Não é segredo. Vazio = login pelo app desativado (continua dando para colar o token).
+INSTAGRAM_APP_ID = "2170472787201423"
+OAUTH_AUTHORIZE_URL = "https://www.instagram.com/oauth/authorize"
+OAUTH_TOKEN_URL = "https://api.instagram.com/oauth/access_token"
+
+# Criado com: npx wrangler d1 create instapanel
+[[d1_databases]]
+binding = "DB"
+database_name = "instapanel"
+database_id = "94687b54-3280-431e-b739-2a3317209eed"
+migrations_dir = "migrations"
+
+# Criado com: npx wrangler r2 bucket create instapanel-media
+[[r2_buckets]]
+binding = "MEDIA"
+bucket_name = "instapanel-media"
+
+[triggers]
+# A cada minuto: fila de publicação.
+# 06:00 UTC: manutenção diária (renovação do token, limpeza de uploads órfãos).
+crons = ["* * * * *", "0 6 * * *"]
+
+[observability]
+enabled = true
+
+# Secrets (não ficam neste arquivo):
+#   PANEL_API_KEY   chave que o painel usa no cabeçalho Authorization
+#   TOKEN_ENC_KEY   32 bytes em base64 para criptografar o token da Meta
+#   META_APP_SECRET chave secreta do app Instagram (troca por token longo)
+# Configure com: npx wrangler secret put <NOME>

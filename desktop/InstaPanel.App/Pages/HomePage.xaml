@@ -1,0 +1,245 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="InstaPanel.App.Pages.HomePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:InstaPanel.App.ViewModels">
+
+    <Page.Resources>
+        <DataTemplate x:Key="PostRowTemplate" x:DataType="vm:PostItemViewModel">
+            <Grid
+                Padding="0,6"
+                AutomationProperties.Name="{x:Bind ChipText}"
+                ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <FontIcon
+                    VerticalAlignment="Top"
+                    FontSize="16"
+                    Foreground="{x:Bind StateBrush}"
+                    Glyph="{x:Bind StateGlyph}" />
+                <StackPanel Grid.Column="1" Spacing="2">
+                    <TextBlock MaxLines="1" TextTrimming="CharacterEllipsis">
+                        <Run FontWeight="SemiBold" Text="{x:Bind TypeText}" />
+                        <Run Text="·" />
+                        <Run Text="{x:Bind Caption}" />
+                    </TextBlock>
+                    <TextBlock Style="{StaticResource CardCaptionStyle}" Text="{x:Bind WhenText}" />
+                    <TextBlock
+                        Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Text="{x:Bind Error}"
+                        TextWrapping="Wrap"
+                        Visibility="{x:Bind HasError}" />
+                </StackPanel>
+                <HyperlinkButton
+                    Grid.Column="2"
+                    VerticalAlignment="Center"
+                    Content="Abrir"
+                    NavigateUri="{x:Bind Permalink}"
+                    Visibility="{x:Bind HasPermalink}" />
+            </Grid>
+        </DataTemplate>
+    </Page.Resources>
+
+    <ScrollViewer>
+        <!--  Coluna com largura máxima, encostada no menu (como as Configurações do Windows)  -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" MaxWidth="1100" />
+            </Grid.ColumnDefinitions>
+        <StackPanel
+            Padding="36,24,36,36"
+            Spacing="16">
+
+            <!--  Cabeçalho  -->
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="Início" />
+                    <TextBlock
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Text="{x:Bind ViewModel.LastUpdatedText, Mode=OneWay}" />
+                </StackPanel>
+                <ProgressRing
+                    Grid.Column="1"
+                    Width="20"
+                    Height="20"
+                    IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" />
+                <Button
+                    Grid.Column="2"
+                    VerticalAlignment="Center"
+                    AutomationProperties.Name="Atualizar"
+                    Command="{x:Bind ViewModel.RefreshCommand}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon FontSize="14" Glyph="&#xE72C;" />
+                        <TextBlock Text="Atualizar" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <InfoBar
+                x:Name="UpdateBar"
+                Title="Nova versão disponível"
+                Severity="Informational">
+                <InfoBar.ActionButton>
+                    <Button Click="OpenSettings_Click" Content="Ver em Configurações" />
+                </InfoBar.ActionButton>
+            </InfoBar>
+
+            <InfoBar
+                Title="Configure o painel"
+                IsClosable="False"
+                IsOpen="{x:Bind ViewModel.NeedsSetup, Mode=OneWay}"
+                Message="Informe a URL do Worker e a chave do painel para ver sua conta."
+                Severity="Informational">
+                <InfoBar.ActionButton>
+                    <Button Click="OpenSettings_Click" Content="Abrir Configurações" />
+                </InfoBar.ActionButton>
+            </InfoBar>
+
+            <InfoBar
+                Title="Não foi possível carregar"
+                IsClosable="False"
+                IsOpen="{x:Bind ViewModel.HasError, Mode=OneWay}"
+                Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}"
+                Severity="Error">
+                <InfoBar.ActionButton>
+                    <Button Click="OpenSettings_Click" Content="Configurações" />
+                </InfoBar.ActionButton>
+            </InfoBar>
+
+            <!--  Conta  -->
+            <Border Style="{StaticResource CardStyle}" Visibility="{x:Bind ViewModel.HasData, Mode=OneWay}">
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <PersonPicture
+                        Width="64"
+                        Height="64"
+                        DisplayName="{x:Bind ViewModel.Username, Mode=OneWay}"
+                        ProfilePicture="{x:Bind ViewModel.ProfilePicture, Mode=OneWay}" />
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="{x:Bind ViewModel.Username, Mode=OneWay}" />
+                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind ViewModel.AccountTypeText, Mode=OneWay}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!--  Indicadores  -->
+            <Grid ColumnSpacing="16" Visibility="{x:Bind ViewModel.HasData, Mode=OneWay}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel Spacing="6">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon FontSize="14" Glyph="&#xE8D7;" />
+                            <TextBlock Style="{StaticResource CardCaptionStyle}" Text="TOKEN DA META" />
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="{x:Bind ViewModel.TokenDaysText, Mode=OneWay}" />
+                        <ProgressBar
+                            Maximum="60"
+                            ShowError="{x:Bind ViewModel.TokenWarning, Mode=OneWay}"
+                            Value="{x:Bind ViewModel.TokenProgress, Mode=OneWay}" />
+                        <TextBlock Text="{x:Bind ViewModel.TokenExpiresText, Mode=OneWay}" />
+                        <TextBlock
+                            Style="{StaticResource CardCaptionStyle}"
+                            Text="{x:Bind ViewModel.TokenNote, Mode=OneWay}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="1" Style="{StaticResource CardStyle}">
+                    <StackPanel Spacing="6">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon FontSize="14" Glyph="&#xE9D2;" />
+                            <TextBlock Style="{StaticResource CardCaptionStyle}" Text="LIMITE DE PUBLICAÇÃO" />
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="{x:Bind ViewModel.QuotaText, Mode=OneWay}" />
+                        <ProgressBar Maximum="{x:Bind ViewModel.QuotaMax, Mode=OneWay}" Value="{x:Bind ViewModel.QuotaProgress, Mode=OneWay}" />
+                        <TextBlock
+                            Style="{StaticResource CardCaptionStyle}"
+                            Text="{x:Bind ViewModel.QuotaNote, Mode=OneWay}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="2" Style="{StaticResource CardStyle}">
+                    <StackPanel Spacing="6">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon FontSize="14" Glyph="&#xE753;" />
+                            <TextBlock Style="{StaticResource CardCaptionStyle}" Text="AGENDADOR NA NUVEM" />
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="{x:Bind ViewModel.WorkerText, Mode=OneWay}" />
+                        <TextBlock
+                            Style="{StaticResource CardCaptionStyle}"
+                            Text="{x:Bind ViewModel.WorkerNote, Mode=OneWay}"
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!--  Próximos agendados  -->
+            <Border Style="{StaticResource CardStyle}" Visibility="{x:Bind ViewModel.HasData, Mode=OneWay}">
+                <StackPanel Spacing="4">
+                    <Grid>
+                        <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Próximos agendados" />
+                        <HyperlinkButton
+                            Padding="0"
+                            HorizontalAlignment="Right"
+                            Click="OpenCalendar_Click"
+                            Content="Ver calendário" />
+                    </Grid>
+                    <TextBlock
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Text="Nada agendado. Use Agendar em Novo post."
+                        Visibility="{x:Bind ViewModel.HasNoUpcoming, Mode=OneWay}" />
+                    <ListView
+                        IsItemClickEnabled="True"
+                        ItemClick="Post_ItemClick"
+                        ItemTemplate="{StaticResource PostRowTemplate}"
+                        ItemsSource="{x:Bind ViewModel.UpcomingPosts}"
+                        SelectionMode="None" />
+                </StackPanel>
+            </Border>
+
+            <!--  Posts recentes  -->
+            <Border Style="{StaticResource CardStyle}" Visibility="{x:Bind ViewModel.HasData, Mode=OneWay}">
+                <StackPanel Spacing="4">
+                    <Grid>
+                        <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Publicados e falhas recentes" />
+                        <HyperlinkButton
+                            Padding="0"
+                            HorizontalAlignment="Right"
+                            Click="OpenHistory_Click"
+                            Content="Ver histórico" />
+                    </Grid>
+                    <TextBlock
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Text="Nenhum post publicado ainda. Comece em Novo post."
+                        Visibility="{x:Bind ViewModel.HasNoRecentPosts, Mode=OneWay}" />
+                    <ListView
+                        IsItemClickEnabled="True"
+                        ItemClick="Post_ItemClick"
+                        ItemTemplate="{StaticResource PostRowTemplate}"
+                        ItemsSource="{x:Bind ViewModel.RecentPosts}"
+                        SelectionMode="None" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</Page>

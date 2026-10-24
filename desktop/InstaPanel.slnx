@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="InstaPanel.App/InstaPanel.App.csproj" />
+  <Project Path="InstaPanel.Cloud/InstaPanel.Cloud.csproj" />
+  <Project Path="InstaPanel.Core/InstaPanel.Core.csproj" />
+  <Project Path="InstaPanel.Data/InstaPanel.Data.csproj" />
+  <Project Path="InstaPanel.Media/InstaPanel.Media.csproj" />
+  <Project Path="InstaPanel.Tests/InstaPanel.Tests.csproj" />
+</Solution>

@@ -1,0 +1,20 @@
+# .NET
+bin/
+obj/
+.vs/
+*.user
+TestResults/
+
+# Pacotes gerados pelo release.ps1 (ficam no R2, não no git)
+desktop/out/
+
+# Worker
+node_modules/
+.wrangler/
+.dev.vars*
+!.dev.vars.example
+
+# Sistema
+Thumbs.db
+desktop.ini
+.DS_Store

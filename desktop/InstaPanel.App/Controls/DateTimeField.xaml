@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="InstaPanel.App.Controls.DateTimeField"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <StackPanel Spacing="8">
+        <StackPanel Orientation="Horizontal" Spacing="12">
+            <CalendarDatePicker
+                x:Name="DatePicker"
+                Width="170"
+                AutomationProperties.Name="Data"
+                DateChanged="DatePicker_DateChanged"
+                DateFormat="{}{day.integer(2)}/{month.integer(2)}/{year.full}"
+                FirstDayOfWeek="Sunday"
+                Header="Data" />
+            <TimePicker
+                x:Name="TimePicker"
+                AutomationProperties.Name="Horário"
+                ClockIdentifier="24HourClock"
+                Header="Horário"
+                MinuteIncrement="5"
+                SelectedTimeChanged="TimePicker_SelectedTimeChanged" />
+        </StackPanel>
+        <StackPanel
+            x:Name="QuickPicks"
+            Orientation="Horizontal"
+            Spacing="6">
+            <Button
+                Click="Quick_Click"
+                Content="Hoje 18:00"
+                Tag="0|18" />
+            <Button
+                Click="Quick_Click"
+                Content="Amanhã 09:00"
+                Tag="1|9" />
+            <Button
+                Click="Quick_Click"
+                Content="Amanhã 18:00"
+                Tag="1|18" />
+        </StackPanel>
+        <TextBlock
+            x:Name="HintText"
+            Style="{StaticResource CaptionTextBlockStyle}"
+            TextWrapping="Wrap" />
+    </StackPanel>
+</UserControl>

@@ -1,0 +1,14 @@
+# Copie para .dev.vars (não versionado) para rodar `npm run dev` localmente.
+# Gere valores com:  node scripts/gen-secrets.mjs
+PANEL_API_KEY=
+TOKEN_ENC_KEY=
+# Opcional: App Secret do app Instagram (troca de token curto por longo)
+META_APP_SECRET=
+
+# Opcional: chave da API da Anthropic (botão "Analisar com IA" do Especialista)
+ANTHROPIC_API_KEY=
+
+# Para testar sem a Meta real nem a Anthropic real, rode `npm run fake-meta` e descomente:
+# META_GRAPH_BASE=http://127.0.0.1:8788
+# ANTHROPIC_BASE_URL=http://127.0.0.1:8788
+# ANTHROPIC_API_KEY=sk-fake

@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="InstaPanel.App.Pages.HistoryPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:InstaPanel.App.ViewModels"
+    NavigationCacheMode="Required">
+
+    <Grid Padding="36,24,36,0" RowSpacing="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="Histórico" />
+                <TextBlock
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Text="Todos os posts enviados para a nuvem. Clique em um post para ver detalhes, remarcar ou cancelar."
+                    TextWrapping="Wrap" />
+            </StackPanel>
+            <ProgressRing
+                Grid.Column="1"
+                Width="20"
+                Height="20"
+                IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" />
+            <Button
+                Grid.Column="2"
+                VerticalAlignment="Center"
+                AutomationProperties.Name="Atualizar"
+                Command="{x:Bind ViewModel.LoadCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon FontSize="14" Glyph="&#xE72C;" />
+                    <TextBlock Text="Atualizar" />
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <InfoBar
+            Grid.Row="1"
+            IsClosable="False"
+            IsOpen="{x:Bind ViewModel.HasError, Mode=OneWay}"
+            Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}"
+            Severity="Error" />
+
+        <SelectorBar Grid.Row="2" SelectionChanged="FilterBar_SelectionChanged">
+            <SelectorBarItem IsSelected="True" Tag="all" Text="Todos" />
+            <SelectorBarItem Tag="pending" Text="Agendados" />
+            <SelectorBarItem Tag="published" Text="Publicados" />
+            <SelectorBarItem Tag="failed" Text="Com falha" />
+            <SelectorBarItem Tag="canceled" Text="Cancelados" />
+        </SelectorBar>
+
+        <TextBlock
+            Grid.Row="3"
+            Margin="0,24,0,0"
+            HorizontalAlignment="Center"
+            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+            Text="Nenhum post aqui ainda."
+            Visibility="{x:Bind ViewModel.IsEmpty, Mode=OneWay}" />
+
+        <ListView
+            Grid.Row="3"
+            Padding="0,0,0,24"
+            IsItemClickEnabled="True"
+            ItemClick="List_ItemClick"
+            ItemsSource="{x:Bind ViewModel.Items}"
+            SelectionMode="None">
+            <ListView.ItemContainerStyle>
+                <Style BasedOn="{StaticResource DefaultListViewItemStyle}" TargetType="ListViewItem">
+                    <Setter Property="Padding" Value="8,6" />
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                </Style>
+            </ListView.ItemContainerStyle>
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="vm:PostItemViewModel">
+                    <Grid AutomationProperties.Name="{x:Bind ChipText}" ColumnSpacing="14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Border
+                            Width="48"
+                            Height="60"
+                            Background="{ThemeResource ControlFillColorSecondaryBrush}"
+                            CornerRadius="4">
+                            <Grid>
+                                <Image Source="{x:Bind Thumbnail}" Stretch="UniformToFill" />
+                                <FontIcon
+                                    FontSize="18"
+                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                    Glyph="{x:Bind TypeGlyph}"
+                                    Visibility="{x:Bind HasNoThumbnail}" />
+                            </Grid>
+                        </Border>
+                        <StackPanel
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            Spacing="2">
+                            <TextBlock MaxLines="1" TextTrimming="CharacterEllipsis">
+                                <Run FontWeight="SemiBold" Text="{x:Bind TypeText}" />
+                                <Run Text="·" />
+                                <Run Text="{x:Bind Caption}" />
+                            </TextBlock>
+                            <TextBlock Style="{StaticResource CardCaptionStyle}" Text="{x:Bind WhenText}" />
+                            <TextBlock
+                                Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                                MaxLines="2"
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Text="{x:Bind Error}"
+                                TextWrapping="Wrap"
+                                Visibility="{x:Bind HasError}" />
+                        </StackPanel>
+                        <Border
+                            Grid.Column="2"
+                            Padding="10,2"
+                            VerticalAlignment="Center"
+                            Background="{x:Bind StateBrush}"
+                            CornerRadius="10">
+                            <TextBlock
+                                FontSize="12"
+                                FontWeight="SemiBold"
+                                Foreground="Black"
+                                Text="{x:Bind StateText}" />
+                        </Border>
+                        <HyperlinkButton
+                            Grid.Column="3"
+                            VerticalAlignment="Center"
+                            Content="Abrir"
+                            NavigateUri="{x:Bind Permalink}"
+                            Visibility="{x:Bind HasPermalink}" />
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+            <ListView.Footer>
+                <Button
+                    Margin="0,12"
+                    HorizontalAlignment="Center"
+                    Command="{x:Bind ViewModel.LoadMoreCommand}"
+                    Content="Carregar mais"
+                    Visibility="{x:Bind ViewModel.HasMore, Mode=OneWay}" />
+            </ListView.Footer>
+        </ListView>
+    </Grid>
+</Page>

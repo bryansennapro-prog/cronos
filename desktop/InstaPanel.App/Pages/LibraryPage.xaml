@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="InstaPanel.App.Pages.LibraryPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:InstaPanel.App.ViewModels"
+    NavigationCacheMode="Required">
+
+    <Grid
+        x:Name="Root"
+        Padding="36,24,36,0"
+        AllowDrop="True"
+        Background="Transparent"
+        DragLeave="Root_DragLeave"
+        DragOver="Root_DragOver"
+        Drop="Root_Drop"
+        RowSpacing="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!--  Cabeçalho  -->
+        <Grid ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="Biblioteca" />
+                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind ViewModel.CountText, Mode=OneWay}" />
+            </StackPanel>
+            <Button
+                Grid.Column="1"
+                VerticalAlignment="Center"
+                AutomationProperties.Name="Adicionar arquivos"
+                Click="AddFiles_Click"
+                Style="{StaticResource AccentButtonStyle}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon FontSize="14" Glyph="&#xE710;" />
+                    <TextBlock Text="Adicionar arquivos" />
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <StackPanel Grid.Row="1" Spacing="8">
+            <InfoBar
+                Title="FFmpeg não encontrado"
+                IsClosable="False"
+                IsOpen="{x:Bind ViewModel.FfmpegMissing, Mode=OneWay}"
+                Message="O painel usa o FFmpeg para ler e converter vídeos. Instale com: winget install Gyan.FFmpeg — e abra o painel de novo."
+                Severity="Error" />
+            <InfoBar
+                Title="Alguns arquivos não foram importados"
+                IsOpen="{x:Bind ViewModel.HasImportErrors, Mode=OneWay}"
+                Message="{x:Bind ViewModel.ImportErrors, Mode=OneWay}"
+                Severity="Warning" />
+            <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.IsImporting, Mode=OneWay}">
+                <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Text="{x:Bind ViewModel.ImportText, Mode=OneWay}" />
+                <ProgressBar IsIndeterminate="False" Value="{x:Bind ViewModel.ImportProgress, Mode=OneWay}" />
+            </StackPanel>
+        </StackPanel>
+
+        <SelectorBar
+            x:Name="FilterBar"
+            Grid.Row="2"
+            SelectionChanged="FilterBar_SelectionChanged">
+            <SelectorBarItem IsSelected="True" Tag="all" Text="Todos" />
+            <SelectorBarItem Tag="image" Text="Imagens" />
+            <SelectorBarItem Tag="video" Text="Vídeos" />
+        </SelectorBar>
+
+        <!--  Estado vazio / área de soltar  -->
+        <Border
+            x:Name="DropHint"
+            Grid.Row="3"
+            Margin="0,0,0,36"
+            BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+            BorderThickness="2"
+            CornerRadius="12"
+            Visibility="{x:Bind ViewModel.IsEmpty, Mode=OneWay}">
+            <StackPanel
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Spacing="10">
+                <FontIcon
+                    FontSize="48"
+                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                    Glyph="&#xE898;" />
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    Style="{StaticResource SubtitleTextBlockStyle}"
+                    Text="Arraste vídeos e imagens para cá" />
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Text="JPG, PNG, WebP · MP4, MOV, MKV, WebM — o painel converte o que for preciso" />
+            </StackPanel>
+        </Border>
+
+        <GridView
+            x:Name="MediaGrid"
+            Grid.Row="3"
+            Padding="0,0,0,36"
+            IsItemClickEnabled="True"
+            ItemClick="Grid_ItemClick"
+            ItemsSource="{x:Bind ViewModel.Items}"
+            SelectionMode="None">
+            <GridView.ItemTemplate>
+                <DataTemplate x:DataType="vm:MediaItemViewModel">
+                    <Grid
+                        Width="176"
+                        RowSpacing="6"
+                        ToolTipService.ToolTip="{x:Bind CompatibilityText}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="234" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid.ContextFlyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem Click="CreatePost_Click" Tag="{x:Bind}" Text="Criar post">
+                                    <MenuFlyoutItem.Icon>
+                                        <FontIcon Glyph="&#xE710;" />
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem Click="ShowInExplorer_Click" Tag="{x:Bind}" Text="Mostrar no Explorer">
+                                    <MenuFlyoutItem.Icon>
+                                        <FontIcon Glyph="&#xE838;" />
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutSeparator />
+                                <MenuFlyoutItem Click="Remove_Click" Tag="{x:Bind}" Text="Remover da biblioteca">
+                                    <MenuFlyoutItem.Icon>
+                                        <FontIcon Glyph="&#xE74D;" />
+                                    </MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                            </MenuFlyout>
+                        </Grid.ContextFlyout>
+
+                        <Border
+                            Background="{ThemeResource ControlFillColorSecondaryBrush}"
+                            CornerRadius="8">
+                            <Grid>
+                                <Image Source="{x:Bind Thumbnail}" Stretch="UniformToFill" />
+                                <Border
+                                    Margin="6"
+                                    Padding="6,2"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Bottom"
+                                    Background="#B0000000"
+                                    CornerRadius="4">
+                                    <TextBlock
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="White"
+                                        Text="{x:Bind KindLabel}" />
+                                </Border>
+                                <Border
+                                    Width="26"
+                                    Height="26"
+                                    Margin="6"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Top"
+                                    Background="#B0000000"
+                                    CornerRadius="13">
+                                    <FontIcon
+                                        FontSize="13"
+                                        Foreground="{x:Bind CompatibilityBrush}"
+                                        Glyph="{x:Bind CompatibilityGlyph}" />
+                                </Border>
+                                <Border
+                                    Margin="6"
+                                    Padding="6,2"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Bottom"
+                                    Background="{ThemeResource SystemFillColorSuccessBrush}"
+                                    CornerRadius="4"
+                                    Visibility="{x:Bind IsPublished}">
+                                    <TextBlock
+                                        FontSize="11"
+                                        FontWeight="SemiBold"
+                                        Foreground="Black"
+                                        Text="PUBLICADO" />
+                                </Border>
+                            </Grid>
+                        </Border>
+                        <StackPanel Grid.Row="1">
+                            <TextBlock
+                                MaxLines="1"
+                                Text="{x:Bind FileName}"
+                                TextTrimming="CharacterEllipsis" />
+                            <TextBlock
+                                Style="{StaticResource CaptionTextBlockStyle}"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Text="{x:Bind DetailsText}"
+                                TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                    </Grid>
+                </DataTemplate>
+            </GridView.ItemTemplate>
+        </GridView>
+
+        <!--  Destaque ao arrastar arquivos por cima  -->
+        <Border
+            x:Name="DropOverlay"
+            Grid.Row="0"
+            Grid.RowSpan="4"
+            Margin="-24,-12,-24,12"
+            Background="{ThemeResource SmokeFillColorDefaultBrush}"
+            BorderBrush="{ThemeResource AccentFillColorDefaultBrush}"
+            BorderThickness="2"
+            CornerRadius="12"
+            IsHitTestVisible="False"
+            Visibility="Collapsed">
+            <TextBlock
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Style="{StaticResource SubtitleTextBlockStyle}"
+                Text="Solte para adicionar à biblioteca" />
+        </Border>
+    </Grid>
+</Page>

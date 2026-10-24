@@ -1,0 +1,452 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="InstaPanel.App.Pages.ExpertPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:InstaPanel.App.ViewModels">
+
+    <Page.Resources>
+        <DataTemplate x:Key="MetricTemplate" x:DataType="vm:ExpertMetricViewModel">
+            <StackPanel Spacing="2">
+                <TextBlock
+                    Style="{StaticResource CardCaptionStyle}"
+                    Text="{x:Bind Label}"
+                    TextTrimming="CharacterEllipsis" />
+                <TextBlock
+                    Style="{StaticResource BodyStrongTextBlockStyle}"
+                    Text="{x:Bind Value}"
+                    TextWrapping="Wrap" />
+                <TextBlock
+                    Style="{StaticResource CardCaptionStyle}"
+                    Text="{x:Bind Note}"
+                    TextWrapping="Wrap"
+                    Visibility="{x:Bind HasNote}" />
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="FindingTemplate" x:DataType="vm:ExpertFindingViewModel">
+            <Grid AutomationProperties.Name="{x:Bind Title}" ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <FontIcon
+                    Margin="0,2,0,0"
+                    VerticalAlignment="Top"
+                    AutomationProperties.Name="{x:Bind LevelText}"
+                    FontSize="16"
+                    Foreground="{x:Bind Brush}"
+                    Glyph="{x:Bind Glyph}" />
+                <StackPanel Grid.Column="1" Spacing="2">
+                    <TextBlock
+                        Style="{StaticResource BodyStrongTextBlockStyle}"
+                        Text="{x:Bind Title}"
+                        TextWrapping="Wrap" />
+                    <TextBlock
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        IsTextSelectionEnabled="True"
+                        Text="{x:Bind Detail}"
+                        TextWrapping="Wrap" />
+                    <TextBlock
+                        IsTextSelectionEnabled="True"
+                        TextWrapping="Wrap"
+                        Visibility="{x:Bind HasAction}">
+                        <Run FontWeight="SemiBold" Text="O que fazer:" />
+                        <Run Text="{x:Bind Action}" />
+                    </TextBlock>
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="SectionTemplate" x:DataType="vm:ExpertSectionViewModel">
+            <Expander
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Stretch"
+                IsExpanded="{x:Bind IsExpanded}">
+                <Expander.Header>
+                    <Grid Padding="0,10" ColumnSpacing="14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <FontIcon FontSize="18" Glyph="{x:Bind Glyph}" />
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind Title}" />
+                            <TextBlock Style="{StaticResource CardCaptionStyle}">
+                                <Run Text="{x:Bind CountsText}" />
+                                <Run Text="·" />
+                                <Run Text="{x:Bind Skill}" />
+                            </TextBlock>
+                        </StackPanel>
+                        <StackPanel
+                            Grid.Column="2"
+                            VerticalAlignment="Center"
+                            Orientation="Horizontal"
+                            Spacing="2">
+                            <TextBlock
+                                Foreground="{x:Bind ScoreBrush}"
+                                Style="{StaticResource SubtitleTextBlockStyle}"
+                                Text="{x:Bind ScoreText}" />
+                            <TextBlock
+                                Margin="0,0,0,3"
+                                VerticalAlignment="Bottom"
+                                Style="{StaticResource CardCaptionStyle}"
+                                Text="/100" />
+                        </StackPanel>
+                    </Grid>
+                </Expander.Header>
+                <StackPanel Spacing="16">
+                    <TextBlock
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Text="{x:Bind Summary}"
+                        TextWrapping="Wrap" />
+                    <ItemsRepeater ItemTemplate="{StaticResource MetricTemplate}" ItemsSource="{x:Bind Metrics}">
+                        <ItemsRepeater.Layout>
+                            <UniformGridLayout
+                                ItemsStretch="Fill"
+                                MinColumnSpacing="20"
+                                MinItemWidth="200"
+                                MinRowSpacing="12" />
+                        </ItemsRepeater.Layout>
+                    </ItemsRepeater>
+                    <ItemsRepeater ItemTemplate="{StaticResource FindingTemplate}" ItemsSource="{x:Bind Findings}">
+                        <ItemsRepeater.Layout>
+                            <StackLayout Spacing="14" />
+                        </ItemsRepeater.Layout>
+                    </ItemsRepeater>
+                </StackPanel>
+            </Expander>
+        </DataTemplate>
+
+        <DataTemplate x:Key="TopPostTemplate" x:DataType="vm:ExpertTopPostViewModel">
+            <Grid
+                Padding="0,6"
+                AutomationProperties.Name="{x:Bind Caption}"
+                ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border
+                    Width="56"
+                    Height="56"
+                    Background="{ThemeResource ControlFillColorSecondaryBrush}"
+                    CornerRadius="{StaticResource ControlCornerRadius}">
+                    <Grid>
+                        <FontIcon
+                            FontSize="18"
+                            Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                            Glyph="{x:Bind TypeGlyph}" />
+                        <Image Source="{x:Bind Thumbnail}" Stretch="UniformToFill" />
+                    </Grid>
+                </Border>
+                <StackPanel Grid.Column="1" Spacing="2">
+                    <TextBlock MaxLines="1" TextTrimming="CharacterEllipsis">
+                        <Run FontWeight="SemiBold" Text="{x:Bind TypeText}" />
+                        <Run Text="·" />
+                        <Run Text="{x:Bind DateText}" />
+                        <Run Text="·" />
+                        <Run Text="{x:Bind Caption}" />
+                    </TextBlock>
+                    <TextBlock Text="{x:Bind StatsText}" />
+                    <TextBlock Style="{StaticResource CardCaptionStyle}" Text="{x:Bind FormulaText}" />
+                </StackPanel>
+                <HyperlinkButton
+                    Grid.Column="2"
+                    VerticalAlignment="Center"
+                    Content="Abrir"
+                    NavigateUri="{x:Bind Permalink}"
+                    Visibility="{x:Bind HasPermalink}" />
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="PlanSlotTemplate" x:DataType="vm:ExpertPlanSlotViewModel">
+            <Grid
+                Padding="0,8"
+                AutomationProperties.Name="{x:Bind DayText}"
+                ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="110" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="{x:Bind DayText}" />
+                    <TextBlock Style="{StaticResource CardCaptionStyle}" Text="{x:Bind Time}" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Spacing="2">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon FontSize="14" Glyph="{x:Bind FormatGlyph}" />
+                        <TextBlock FontWeight="SemiBold" Text="{x:Bind FormatText}" />
+                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind Details}" />
+                    </StackPanel>
+                    <TextBlock Text="{x:Bind Idea}" TextWrapping="Wrap" />
+                    <TextBlock
+                        Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Text="{x:Bind AlreadyPlanned}"
+                        Visibility="{x:Bind HasAlreadyPlanned}" />
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+    </Page.Resources>
+
+    <ScrollViewer>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" MaxWidth="1100" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Padding="36,24,36,36" Spacing="16">
+
+                <!--  Cabeçalho  -->
+                <Grid ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="Especialista do perfil" />
+                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Análise com as 9 skills de Instagram, a partir dos dados reais da sua conta." />
+                    </StackPanel>
+                    <ComboBox
+                        x:Name="GoalBox"
+                        Grid.Column="1"
+                        MinWidth="200"
+                        VerticalAlignment="Center"
+                        AutomationProperties.Name="Objetivo do perfil"
+                        IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}"
+                        PlaceholderText="Objetivo"
+                        SelectedIndex="{x:Bind ViewModel.SelectedGoalIndex, Mode=TwoWay}"
+                        ToolTipService.ToolTip="Objetivo do perfil: muda as recomendações de link, fixados e promoção">
+                        <x:String>Crescer em seguidores</x:String>
+                        <x:String>Vender um produto</x:String>
+                        <x:String>Conseguir clientes</x:String>
+                        <x:String>Construir autoridade</x:String>
+                    </ComboBox>
+                    <ProgressRing
+                        Grid.Column="2"
+                        Width="20"
+                        Height="20"
+                        IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" />
+                    <Button
+                        Grid.Column="3"
+                        VerticalAlignment="Center"
+                        Click="Copy_Click"
+                        IsEnabled="{x:Bind ViewModel.HasReport, Mode=OneWay}"
+                        ToolTipService.ToolTip="Copia o relatório completo em Markdown">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon FontSize="14" Glyph="&#xE8C8;" />
+                            <TextBlock Text="Copiar relatório" />
+                        </StackPanel>
+                    </Button>
+                    <Button
+                        Grid.Column="4"
+                        VerticalAlignment="Center"
+                        Command="{x:Bind ViewModel.AnalyzeCommand}"
+                        Style="{StaticResource AccentButtonStyle}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon FontSize="14" Glyph="&#xE72C;" />
+                            <TextBlock Text="Analisar de novo" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <InfoBar
+                    Title="Configure o painel"
+                    IsClosable="False"
+                    IsOpen="{x:Bind ViewModel.NeedsSetup, Mode=OneWay}"
+                    Message="Informe a URL do Worker e a chave do painel para o especialista ler sua conta."
+                    Severity="Informational">
+                    <InfoBar.ActionButton>
+                        <Button Click="OpenSettings_Click" Content="Abrir Configurações" />
+                    </InfoBar.ActionButton>
+                </InfoBar>
+
+                <InfoBar
+                    Title="Não foi possível analisar"
+                    IsClosable="False"
+                    IsOpen="{x:Bind ViewModel.HasError, Mode=OneWay}"
+                    Message="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}"
+                    Severity="Error" />
+
+                <InfoBar
+                    x:Name="CopiedBar"
+                    Title="Relatório copiado"
+                    Message="Cole onde quiser (Notion, Word, WhatsApp...)."
+                    Severity="Success" />
+
+                <!--  Resumo  -->
+                <Border Style="{StaticResource CardStyle}" Visibility="{x:Bind ViewModel.HasReport, Mode=OneWay}">
+                    <StackPanel Spacing="20">
+                        <Grid ColumnSpacing="20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid
+                                Width="84"
+                                Height="84"
+                                AutomationProperties.Name="Nota geral">
+                                <ProgressRing
+                                    Width="84"
+                                    Height="84"
+                                    Background="{ThemeResource ControlStrongFillColorDisabledBrush}"
+                                    IsIndeterminate="False"
+                                    Maximum="100"
+                                    Value="{x:Bind ViewModel.Score, Mode=OneWay}" />
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        Style="{StaticResource SubtitleTextBlockStyle}"
+                                        Text="{x:Bind ViewModel.ScoreText, Mode=OneWay}" />
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        Style="{StaticResource CardCaptionStyle}"
+                                        Text="de 100" />
+                                </StackPanel>
+                            </Grid>
+                            <PersonPicture
+                                Grid.Column="1"
+                                Width="56"
+                                Height="56"
+                                DisplayName="{x:Bind ViewModel.Username, Mode=OneWay}"
+                                ProfilePicture="{x:Bind ViewModel.ProfilePicture, Mode=OneWay}" />
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="{x:Bind ViewModel.Headline, Mode=OneWay}" TextWrapping="Wrap" />
+                                <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}">
+                                    <Run Text="{x:Bind ViewModel.Username, Mode=OneWay}" />
+                                    <Run Text="·" />
+                                    <Run Text="{x:Bind ViewModel.AnalyzedText, Mode=OneWay}" />
+                                </TextBlock>
+                            </StackPanel>
+                        </Grid>
+                        <ItemsRepeater ItemTemplate="{StaticResource MetricTemplate}" ItemsSource="{x:Bind ViewModel.Highlights}">
+                            <ItemsRepeater.Layout>
+                                <UniformGridLayout
+                                    ItemsStretch="Fill"
+                                    MinColumnSpacing="20"
+                                    MinItemWidth="190"
+                                    MinRowSpacing="12" />
+                            </ItemsRepeater.Layout>
+                        </ItemsRepeater>
+                    </StackPanel>
+                </Border>
+
+                <!--  Prioridades  -->
+                <Border Style="{StaticResource CardStyle}" Visibility="{x:Bind ViewModel.HasReport, Mode=OneWay}">
+                    <StackPanel Spacing="14">
+                        <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="O que fazer primeiro" />
+                        <TextBlock
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="Nenhuma pendência importante. Veja as áreas abaixo para ajustes finos."
+                            Visibility="{x:Bind ViewModel.HasNoPriorities, Mode=OneWay}" />
+                        <ItemsRepeater ItemTemplate="{StaticResource FindingTemplate}" ItemsSource="{x:Bind ViewModel.Priorities}">
+                            <ItemsRepeater.Layout>
+                                <StackLayout Spacing="14" />
+                            </ItemsRepeater.Layout>
+                        </ItemsRepeater>
+                    </StackPanel>
+                </Border>
+
+                <!--  Análise com IA: só roda quando o usuário clica  -->
+                <Border Style="{StaticResource CardStyle}" Visibility="{x:Bind ViewModel.HasReport, Mode=OneWay}">
+                    <StackPanel Spacing="12">
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Spacing="2">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="16" Glyph="&#xE945;" />
+                                    <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Análise com IA" />
+                                </StackPanel>
+                                <TextBlock
+                                    Style="{StaticResource CardCaptionStyle}"
+                                    Text="O Claude lê este relatório e seus posts e escreve um diagnóstico, nome e bio reescritos, ganchos novos e ideias para a semana. Só roda quando você clica; cada análise é cobrada por uso na sua conta da Anthropic."
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Button
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Command="{x:Bind ViewModel.AnalyzeWithAiCommand}"
+                                IsEnabled="{x:Bind ViewModel.CanRunAi, Mode=OneWay}">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon FontSize="14" Glyph="&#xE945;" />
+                                    <TextBlock Text="Analisar com IA" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                        <StackPanel Spacing="6" Visibility="{x:Bind ViewModel.IsAiRunning, Mode=OneWay}">
+                            <ProgressBar IsIndeterminate="True" />
+                            <TextBlock Style="{StaticResource CardCaptionStyle}" Text="Analisando… pode levar de 1 a 3 minutos." />
+                        </StackPanel>
+                        <InfoBar
+                            Title="A análise com IA falhou"
+                            IsClosable="False"
+                            IsOpen="{x:Bind ViewModel.HasAiError, Mode=OneWay}"
+                            Message="{x:Bind ViewModel.AiError, Mode=OneWay}"
+                            Severity="Error" />
+                        <StackPanel Spacing="8" Visibility="{x:Bind ViewModel.HasAi, Mode=OneWay}">
+                            <TextBlock
+                                Style="{StaticResource CardCaptionStyle}"
+                                Text="{x:Bind ViewModel.AiInfo, Mode=OneWay}"
+                                TextWrapping="Wrap" />
+                            <RichTextBlock x:Name="AiBlock" IsTextSelectionEnabled="True" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!--  As 9 áreas  -->
+                <TextBlock
+                    Style="{StaticResource SectionHeaderStyle}"
+                    Text="Análise por área"
+                    Visibility="{x:Bind ViewModel.HasReport, Mode=OneWay}" />
+                <ItemsRepeater
+                    ItemTemplate="{StaticResource SectionTemplate}"
+                    ItemsSource="{x:Bind ViewModel.Sections}"
+                    Visibility="{x:Bind ViewModel.HasReport, Mode=OneWay}">
+                    <ItemsRepeater.Layout>
+                        <StackLayout Spacing="6" />
+                    </ItemsRepeater.Layout>
+                </ItemsRepeater>
+
+                <!--  Plano da semana  -->
+                <Border Style="{StaticResource CardStyle}" Visibility="{x:Bind ViewModel.HasReport, Mode=OneWay}">
+                    <StackPanel Spacing="4">
+                        <Grid>
+                            <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Plano sugerido para os próximos 7 dias" />
+                            <HyperlinkButton
+                                Padding="0"
+                                HorizontalAlignment="Right"
+                                Click="OpenCompose_Click"
+                                Content="Novo post" />
+                        </Grid>
+                        <TextBlock
+                            Style="{StaticResource CardCaptionStyle}"
+                            Text="Formatos, fórmulas e horários escolhidos pelos seus dados. As ideias são pontos de partida: use só números e fatos reais."
+                            TextWrapping="Wrap" />
+                        <ItemsRepeater ItemTemplate="{StaticResource PlanSlotTemplate}" ItemsSource="{x:Bind ViewModel.WeekPlan}" />
+                    </StackPanel>
+                </Border>
+
+                <!--  Melhores posts  -->
+                <Border Style="{StaticResource CardStyle}" Visibility="{x:Bind ViewModel.HasReport, Mode=OneWay}">
+                    <StackPanel Spacing="4">
+                        <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="Seus melhores posts" />
+                        <TextBlock
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="Sem curtidas visíveis para comparar."
+                            Visibility="{x:Bind ViewModel.HasNoTopPosts, Mode=OneWay}" />
+                        <ItemsRepeater ItemTemplate="{StaticResource TopPostTemplate}" ItemsSource="{x:Bind ViewModel.TopPosts}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</Page>
