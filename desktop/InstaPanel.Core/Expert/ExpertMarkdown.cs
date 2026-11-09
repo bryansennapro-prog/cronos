@@ -18,7 +18,7 @@ public static class ExpertMarkdown
         sb.AppendLine();
         sb.AppendLine($"**Nota geral: {report.Score}/100.** {report.Headline}");
         sb.AppendLine();
-        foreach (var m in report.Highlights) sb.AppendLine($"- {m.Label}: **{m.Value}**{Note(m.Note)}");
+        foreach (var h in report.Highlights) sb.AppendLine($"- {h.Label}: **{h.Value}** ({h.Meaning})");
 
         if (report.Priorities.Count > 0)
         {
@@ -26,7 +26,7 @@ public static class ExpertMarkdown
             sb.AppendLine("## Prioridades");
             sb.AppendLine();
             var n = 1;
-            foreach (var p in report.Priorities) sb.AppendLine($"{n++}. **{p.Title}.** {p.Action}");
+            foreach (var p in report.Priorities) sb.AppendLine($"{n++}. **{p.Area}: {p.Finding.Title}.** {p.Finding.Action}");
         }
 
         foreach (var s in report.Sections)
@@ -34,7 +34,9 @@ public static class ExpertMarkdown
             sb.AppendLine();
             sb.AppendLine($"## {s.Title}{(s.Score is { } sc ? $" ({sc}/100)" : "")}");
             sb.AppendLine();
-            sb.AppendLine($"_{s.Summary}_ (skill `{s.Skill}`)");
+            sb.AppendLine($"_{s.Why}_");
+            sb.AppendLine();
+            sb.AppendLine($"{s.Summary} (skill `{s.Skill}`)");
             if (s.Metrics.Count > 0)
             {
                 sb.AppendLine();
@@ -74,7 +76,7 @@ public static class ExpertMarkdown
             foreach (var p in report.WeekPlan)
             {
                 var day = p.Date.ToDateTime(TimeOnly.MinValue).ToString("ddd dd/MM", pt);
-                var idea = p.Idea + (p.AlreadyPlanned is { } a ? $" ({a})" : "");
+                var idea = p.Idea + (p.Inspiration is { } i ? $" {i}" : "") + (p.AlreadyPlanned is { } a ? $" ({a})" : "");
                 sb.AppendLine($"| {day} | {ProfileExpert.FormatName(p.Format)} | {p.Pillar} | {p.Formula.Label} | {p.Goal} | {p.Time} | {idea.Replace("|", "/")} |");
             }
         }

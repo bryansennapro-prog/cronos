@@ -167,7 +167,7 @@ public class ProfileExpertTests
         Assert.Contains("Campo Nome vazio", problems);
         Assert.Contains("Bio vazia", problems);
         Assert.Contains("Sem link no perfil", problems);
-        Assert.StartsWith("Perfil:", r.Priorities[0].Title);
+        Assert.Equal("profile", r.Priorities[0].AreaKey);
     }
 
     [Fact]
@@ -229,7 +229,7 @@ public class ProfileExpertTests
 
         Assert.Contains(audience.Findings, f => f.Title == "Formato mais forte: Reels");
         Assert.Contains(audience.Findings, f => f.Title == "Pouca constância" && f.Level == FindingLevel.Problem);
-        Assert.Contains(r.Highlights, m => m.Label == "Formato mais forte" && m.Value == "Reels");
+        Assert.Contains(r.Highlights, h => h.Key == "format" && h.Value == "Reels" && h.Tone == FindingLevel.Good);
     }
 
     [Fact]
@@ -268,7 +268,8 @@ public class ProfileExpertTests
             TimeZone = TimeZoneInfo.Utc,
             Previous = new ExpertSnapshot(Now.AddDays(-7), 1880, 70),
         });
-        Assert.Equal("+120 desde 16/10", r.Highlights[0].Note);
+        Assert.Equal("+120 desde 16/10", r.Highlights[0].Meaning);
+        Assert.Equal(FindingLevel.Good, r.Highlights[0].Tone);
     }
 
     [Fact]

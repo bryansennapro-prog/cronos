@@ -42,11 +42,11 @@ public static partial class ProfileExpert
         var priorities = sections
             .SelectMany((s, i) => s.Findings
                 .Where(f => f.Action is not null && f.Level is FindingLevel.Problem or FindingLevel.Warning)
-                .Select(f => (Order: i, Finding: f with { Title = $"{s.Title}: {f.Title}" })))
-            .OrderByDescending(x => x.Finding.Level)
+                .Select(f => (Order: i, Item: new Priority(s.Key, s.Title, f))))
+            .OrderByDescending(x => x.Item.Finding.Level)
             .ThenBy(x => x.Order)
             .Take(5)
-            .Select(x => x.Finding)
+            .Select(x => x.Item)
             .ToList();
 
         var top = ctx.Scored
@@ -77,26 +77,57 @@ public static partial class ProfileExpert
         _ => "O perfil precisa de atenção.",
     };
 
-    private static List<Metric> Highlights(Context ctx)
+    /// <summary>Os 4 números do resumo, cada um com o que significa em palavras simples.</summary>
+    private static List<Highlight> Highlights(Context ctx)
     {
         var p = ctx.Input.Profile;
-        var list = new List<Metric>
+        var delta = FollowerDiff(ctx);
+        var list = new List<Highlight>
         {
-            new("Seguidores", p.Followers is { } f ? Num(f) : "—", FollowerDelta(ctx)),
-            new("Engajamento mediano", ctx.MedianRate is { } r ? Pct(r, 1) : ctx.Median is { } m ? Num(m) : "—",
-                ctx.MedianRate is not null ? "curtidas + comentários ÷ seguidores" : "interações por post"),
-            new("Posts por semana", ctx.PostsPerWeek.ToString("0.0", Pt), "últimos 30 dias"),
+            new("followers", "Seguidores", p.Followers is { } f ? Num(f) : "—",
+                FollowerDelta(ctx) ?? "Na próxima análise você vê quanto mudou",
+                delta switch { > 0 => FindingLevel.Good, < 0 => FindingLevel.Warning, _ => FindingLevel.Info }),
         };
-        if (ctx.BestFormat is { } best) list.Add(new("Formato mais forte", FormatName(best.Format, plural: true), $"{Times(best.Ratio)} a mediana"));
+
+        if (ctx.MedianRate is { } rate)
+        {
+            var (meaning, tone) = rate switch
+            {
+                < 1 => ("Abaixo da média (o normal é de 1% a 3%)", FindingLevel.Warning),
+                < 3 => ("Na média (o normal é de 1% a 3%)", FindingLevel.Info),
+                _ => ("Acima da média (o normal é de 1% a 3%)", FindingLevel.Good),
+            };
+            list.Add(new("engagement", "Engajamento", Pct(rate, 1), meaning, tone));
+        }
+        else
+        {
+            list.Add(new("engagement", "Interações por post", ctx.Median is { } m ? Num(m) : "—", "Curtidas + comentários de um post típico", FindingLevel.Info));
+        }
+
+        var perWeek = ctx.PostsPerWeek;
+        var (cadence, cadenceTone) = perWeek switch
+        {
+            < 2 => ("Pouco: o ideal é de 3 a 5 por semana", FindingLevel.Problem),
+            < 3 => ("Abaixo do ideal (de 3 a 5 por semana)", FindingLevel.Warning),
+            <= 10 => ("No ritmo ideal (de 3 a 5 por semana)", FindingLevel.Good),
+            _ => ("Muito volume: qualidade conta mais", FindingLevel.Info),
+        };
+        list.Add(new("cadence", "Posts por semana", perWeek.ToString("0.0", Pt), cadence, cadenceTone));
+
+        list.Add(ctx.BestFormat is { } best
+            ? new("format", "Formato que mais funciona", FormatName(best.Format, plural: true), $"Rendem {Times(best.Ratio)} mais que um post típico seu", FindingLevel.Good)
+            : new("format", "Formato que mais funciona", "—", "Poste em formatos diferentes para comparar", FindingLevel.Info));
         return list;
     }
 
+    private static int? FollowerDiff(Context ctx) =>
+        ctx.Input.Previous is { Followers: { } before } && ctx.Input.Profile.Followers is { } now ? now - before : null;
+
     private static string? FollowerDelta(Context ctx)
     {
-        if (ctx.Input.Previous is not { Followers: { } before } prev || ctx.Input.Profile.Followers is not { } now) return null;
-        var diff = now - before;
+        if (FollowerDiff(ctx) is not { } diff) return null;
         var sign = diff > 0 ? "+" : "";
-        return $"{sign}{Num(diff)} desde {Local(ctx, prev.At):dd/MM}";
+        return $"{sign}{Num(diff)} desde {Local(ctx, ctx.Input.Previous!.At):dd/MM}";
     }
 
     // ---------- 1. Perfil (ig-profile-optimizer) ----------
@@ -215,7 +246,7 @@ public static partial class ProfileExpert
                 null));
         }
 
-        return Section("profile", "Perfil", "ig-profile-optimizer",
+        return Section("profile", "ig-profile-optimizer",
             "Foto, Nome, @, bio, link e o topo do grid: é aqui que o visitante decide seguir.", f, metrics);
     }
 
@@ -264,7 +295,7 @@ public static partial class ProfileExpert
         if (ctx.Feed.Count == 0)
         {
             f.Add(new(FindingLevel.Warning, "Nenhum post publicado", "Sem posts, não há o que medir. Comece pelo plano da semana.", "Publique o primeiro post do plano sugerido."));
-            return Section("audience", "Desempenho e audiência", "ig-audience-insights", "Sem posts para analisar ainda.", f, metrics);
+            return Section("audience", "ig-audience-insights", "Sem posts para analisar ainda.", f, metrics);
         }
 
         if (ctx.Scored.Count == 0)
@@ -335,7 +366,7 @@ public static partial class ProfileExpert
         var summary = ctx.Median is { } m2
             ? $"Um post típico seu recebe {Num(m2)} interações" + (ctx.MedianRate is { } r2 ? $" ({Pct(r2, 1)} dos seguidores)." : ".")
             : "Sem curtidas visíveis para medir.";
-        return Section("audience", "Desempenho e audiência", "ig-audience-insights", summary, f, metrics);
+        return Section("audience", "ig-audience-insights", summary, f, metrics);
     }
 
     // ---------- 3. Legendas (ig-caption-writer) ----------
@@ -345,7 +376,7 @@ public static partial class ProfileExpert
         var f = new List<Finding>();
         var recent = ctx.Recent;
         if (recent.Count == 0)
-            return Section("captions", "Legendas", "ig-caption-writer", "Sem posts para analisar.", f, [], scoreWhenEmpty: false);
+            return Section("captions", "ig-caption-writer", "Sem posts para analisar.", f, [], scoreWhenEmpty: false);
 
         var withText = recent.Where(p => !ctx.Caption(p).IsEmpty).ToList();
         var empty = recent.Count - withText.Count;
@@ -396,7 +427,7 @@ public static partial class ProfileExpert
                 f.Add(new(FindingLevel.Good, "Legendas bem estruturadas", "Gancho antes do \"mais\" e chamada para ação na maioria dos posts."));
         }
 
-        return Section("captions", "Legendas", "ig-caption-writer",
+        return Section("captions", "ig-caption-writer",
             "Os primeiros 125 caracteres fazem todo o trabalho; o fechamento pede um salvamento ou um envio.", f, metrics);
     }
 
@@ -423,7 +454,7 @@ public static partial class ProfileExpert
         var f = new List<Finding>();
         var recent = ctx.Recent;
         if (recent.Count == 0)
-            return Section("hooks", "Ganchos", "ig-hook-extractor", "Sem posts para analisar.", f, [], scoreWhenEmpty: false);
+            return Section("hooks", "ig-hook-extractor", "Sem posts para analisar.", f, [], scoreWhenEmpty: false);
 
         var groups = recent.GroupBy(ctx.Formula).OrderByDescending(g => g.Count()).ToList();
         var metrics = groups.Select(g =>
@@ -467,7 +498,7 @@ public static partial class ProfileExpert
             f.Add(new(FindingLevel.Warning, "Nenhum post recente feito para ser salvo", "Listas, métodos e passo a passo continuam rendendo alcance por dias.",
                 "Faça um carrossel em lista (IG5) ou um método para copiar (IG8)."));
 
-        return Section("hooks", "Ganchos", "ig-hook-extractor",
+        return Section("hooks", "ig-hook-extractor",
             "Qual das 10 fórmulas de gancho cada post usa, e quais funcionam no seu perfil.", f, metrics);
     }
 
@@ -478,7 +509,7 @@ public static partial class ProfileExpert
         var f = new List<Finding>();
         var posts = ctx.Recent.Where(p => !ctx.Caption(p).IsEmpty).ToList();
         if (posts.Count == 0)
-            return Section("hashtags", "Hashtags", "ig-hashtag-strategist", "Sem legendas para analisar.", f, [], scoreWhenEmpty: false);
+            return Section("hashtags", "ig-hashtag-strategist", "Sem legendas para analisar.", f, [], scoreWhenEmpty: false);
 
         var a = posts.Select(ctx.Caption).ToList();
         var counts = a.Select(x => x.Hashtags.Count).ToList();
@@ -535,7 +566,7 @@ public static partial class ProfileExpert
         if (over == 0 && spam.Count == 0 && broadHeavy == 0 && repeated is null && mid == 0)
             f.Add(new(FindingLevel.Good, "Hashtags no tamanho certo", "Sem excesso, sem spam e sem bloco repetido."));
 
-        return Section("hashtags", "Hashtags", "ig-hashtag-strategist",
+        return Section("hashtags", "ig-hashtag-strategist",
             "3 a 5 hashtags no tamanho certo valem mais que 30 genéricas.", f, metrics);
     }
 
@@ -592,7 +623,7 @@ public static partial class ProfileExpert
         if (all.Count == 0)
             f.Add(new(FindingLevel.Info, "Nada para revisar", "Não há legendas publicadas nem agendadas."));
 
-        return Section("humanizer", "Revisão anti-IA", "ig-humanizer",
+        return Section("humanizer", "ig-humanizer",
             "Revisão antes de publicar: gancho, tamanho, hashtags, emojis, fechamento e vícios de texto gerado.", f, metrics,
             scoreWhenEmpty: false);
     }
@@ -619,7 +650,7 @@ public static partial class ProfileExpert
         var f = new List<Finding>();
         var recent = ctx.Recent;
         if (recent.Count == 0)
-            return Section("carousel", "Carrosséis", "ig-carousel-planner", "Sem posts para analisar.", f, [], scoreWhenEmpty: false);
+            return Section("carousel", "ig-carousel-planner", "Sem posts para analisar.", f, [], scoreWhenEmpty: false);
 
         var carousels = recent.Where(p => p.Format == MediaFormat.Carousel).ToList();
         var share = carousels.Count * 100.0 / recent.Count;
@@ -662,7 +693,7 @@ public static partial class ProfileExpert
         f.Add(new(FindingLevel.Info, "Checklist do carrossel (a API não lê os slides)",
             "Slide 1 com promessa e curiosidade, nunca só um título. O melhor ponto nos slides 2-3. Um ponto por slide, legível em 2 segundos no formato 4:5. Último slide com o resumo e um único pedido (salvar ou seguir). 6 a 10 slides, sem misturar foto e vídeo."));
 
-        return Section("carousel", "Carrosséis", "ig-carousel-planner",
+        return Section("carousel", "ig-carousel-planner",
             "O slide 1 ganha o deslize; o último ganha o salvamento.", f, metrics);
     }
 
@@ -714,7 +745,7 @@ public static partial class ProfileExpert
         f.Add(new(FindingLevel.Info, "Plano sugerido para os próximos 7 dias",
             "Pilares: 40% educativo, 30% história, 20% engajamento, 10% promoção. Horários pelos seus dados quando há posts suficientes; senão, as janelas de referência."));
 
-        return Section("planner", "Planejamento da semana", "ig-content-planner",
+        return Section("planner", "ig-content-planner",
             "Reels para alcance, carrosséis para salvamentos, stories para relacionamento.", f, metrics, scoreWhenEmpty: true);
     }
 
@@ -770,14 +801,14 @@ public static partial class ProfileExpert
             var date = today.AddDays(i);
             var t = template[date.DayOfWeek];
             var time = t.Format != MediaFormat.Story ? feedTime ?? t.Time : t.Time;
-            var idea = t.Idea;
+            string? inspiration = null;
             if (t.Format != MediaFormat.Story && topByFormat.TryGetValue(t.Format, out var reference) && ctx.VsMedian(reference) is >= 1.3 and var ratio)
-                idea += $" Referência: {Possessive(t.Format)} de {Local(ctx, reference.PublishedAt):dd/MM} ({Times(ratio)} a mediana).";
+                inspiration = $"Inspire-se {(t.Format == MediaFormat.Image ? "na" : "no")} {Possessive(t.Format)} de {Local(ctx, reference.PublishedAt):dd/MM}, que rendeu {Times(ratio)} um post típico.";
 
             var already = ctx.Upcoming.Where(p => DateOnly.FromDateTime(Local(ctx, p.ScheduledAt).Date) == date)
                 .Select(p => $"{FormatName(p.Format)} {Local(ctx, p.ScheduledAt):HH:mm}").ToList();
-            plan.Add(new PlanSlot(date, time, t.Format, t.Pillar, t.Formula, t.Formula.Goal, idea,
-                already.Count == 0 ? null : "Já agendado: " + string.Join(", ", already)));
+            plan.Add(new PlanSlot(date, time, t.Format, t.Pillar, t.Formula, t.Formula.Goal, t.Idea,
+                already.Count == 0 ? null : "Já agendado: " + string.Join(", ", already), inspiration));
         }
         return plan;
     }
@@ -823,15 +854,39 @@ public static partial class ProfileExpert
             new("Candidatos a reaproveitar", candidates.Count.ToString(Pt), $"mais de {RepurposeMinAgeDays} dias e 1,5× a mediana"),
             new("Mídias paradas na biblioteca", unused.ToString(Pt)),
         };
-        return Section("repurpose", "Reaproveitamento", "ig-repurposer",
+        return Section("repurpose", "ig-repurposer",
             "O que já funcionou pode voltar em outro formato, sem parecer repetido.", f, metrics);
     }
 
     // ---------- Helpers ----------
 
-    private static ExpertSection Section(string key, string title, string skill, string summary, List<Finding> findings,
+    /// <summary>Nome de cada área em linguagem simples e por que ela importa (texto didático da tela).</summary>
+    private static readonly Dictionary<string, (string Title, string Why)> Areas = new()
+    {
+        ["profile"] = ("Perfil", "É a primeira coisa que alguém vê ao visitar você. Em poucos segundos a pessoa decide se vai seguir."),
+        ["audience"] = ("Resultados", "Mostra como seus posts estão sendo recebidos e qual formato funciona melhor no seu perfil."),
+        ["captions"] = ("Legendas", "O Instagram só mostra o começo da legenda. Se a primeira linha não prende, ninguém toca em \"mais\"."),
+        ["hooks"] = ("Primeira frase", "A primeira frase (o \"gancho\") decide se a pessoa para de rolar. Existem 10 jeitos testados de começar bem."),
+        ["hashtags"] = ("Hashtags", "Hoje a hashtag serve para dizer o tema do post. Poucas e certeiras valem mais que muitas."),
+        ["humanizer"] = ("Texto natural", "Texto com cara de robô ou de propaganda afasta as pessoas. Aqui revisamos suas legendas antes de sair."),
+        ["carousel"] = ("Carrosséis", "Carrossel é o formato que as pessoas mais salvam, e salvamento ajuda o post a chegar mais longe."),
+        ["planner"] = ("Sua semana", "Postar com constância vale mais que postar muito. Aqui está sua fila e um plano pronto para seguir."),
+        ["repurpose"] = ("Reaproveitar", "O que já deu certo pode voltar em outro formato, com menos trabalho do que criar do zero."),
+    };
+
+    /// <summary>A nota em uma palavra.</summary>
+    public static string Grade(int score) => score switch
+    {
+        >= 80 => "Ótimo",
+        >= 60 => "Bom",
+        >= 40 => "Atenção",
+        _ => "Cuidado",
+    };
+
+    private static ExpertSection Section(string key, string skill, string summary, List<Finding> findings,
         List<Metric> metrics, bool scoreWhenEmpty = true)
     {
+        var (title, why) = Areas[key];
         int? score = findings.Count == 0 && !scoreWhenEmpty
             ? null
             : Math.Clamp(100 - 30 * findings.Count(x => x.Level == FindingLevel.Problem) - 12 * findings.Count(x => x.Level == FindingLevel.Warning), 0, 100);
@@ -842,7 +897,7 @@ public static partial class ProfileExpert
             FindingLevel.Good => 1,
             _ => 0,
         }).ToList();
-        return new ExpertSection(key, title, skill, summary, score, metrics, ordered);
+        return new ExpertSection(key, title, skill, summary, why, score, metrics, ordered);
     }
 
     internal static double? Median(IEnumerable<double> values)

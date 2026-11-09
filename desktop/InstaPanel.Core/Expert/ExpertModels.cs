@@ -83,11 +83,18 @@ public sealed record Finding(FindingLevel Level, string Title, string Detail, st
 
 public sealed record Metric(string Label, string Value, string? Note = null);
 
+/// <summary>Indicador do resumo, já com o que ele significa ("acima da média") e o tom (bom/ruim).</summary>
+public sealed record Highlight(string Key, string Label, string Value, string Meaning, FindingLevel Tone);
+
+/// <summary>Um dos próximos passos, com a área de onde veio.</summary>
+public sealed record Priority(string AreaKey, string Area, Finding Finding);
+
 public sealed record ExpertSection(
     string Key,
     string Title,
     string Skill,
     string Summary,
+    string Why,
     int? Score,
     IReadOnlyList<Metric> Metrics,
     IReadOnlyList<Finding> Findings);
@@ -108,7 +115,8 @@ public sealed record PlanSlot(
     HookFormula Formula,
     string Goal,
     string Idea,
-    string? AlreadyPlanned);
+    string? AlreadyPlanned,
+    string? Inspiration = null);
 
 public sealed record ExpertReport(
     DateTimeOffset GeneratedAt,
@@ -116,8 +124,8 @@ public sealed record ExpertReport(
     ProfileGoal Goal,
     int Score,
     string Headline,
-    IReadOnlyList<Metric> Highlights,
-    IReadOnlyList<Finding> Priorities,
+    IReadOnlyList<Highlight> Highlights,
+    IReadOnlyList<Priority> Priorities,
     IReadOnlyList<ExpertSection> Sections,
     IReadOnlyList<RankedPost> TopPosts,
     IReadOnlyList<PlanSlot> WeekPlan,

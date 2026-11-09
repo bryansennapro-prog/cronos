@@ -16,6 +16,7 @@ public sealed partial class ExpertPage : Page
         {
             if (e.PropertyName == nameof(ExpertViewModel.AiText)) MarkdownView.Render(AiBlock, ViewModel.AiText);
         };
+        ViewModel.MascotSpoke += (_, _) => Mascot.Wave();
     }
 
     public ExpertViewModel ViewModel { get; } = new();
@@ -36,12 +37,34 @@ public sealed partial class ExpertPage : Page
     private void OnConnectionChanged(object? sender, EventArgs e) =>
         DispatcherQueue.TryEnqueue(() => ViewModel.AnalyzeCommand.Execute(null));
 
+    private double _scrollWhenBubbleOpened = -1;
+
+    // Quando a pessoa rola para ler, o Tico recolhe o balão (clicar nele traz de volta).
+    private void PageScroll_ViewChanged(object? sender, ScrollViewerViewChangedEventArgs e)
+    {
+        if (!ViewModel.IsBubbleOpen)
+        {
+            _scrollWhenBubbleOpened = -1;
+            return;
+        }
+        if (_scrollWhenBubbleOpened < 0) _scrollWhenBubbleOpened = PageScroll.VerticalOffset;
+        else if (Math.Abs(PageScroll.VerticalOffset - _scrollWhenBubbleOpened) > 240) ViewModel.QuietMascot();
+    }
+
+    private void CopiedBar_Closed(InfoBar sender, InfoBarClosedEventArgs args) => sender.Visibility = Visibility.Collapsed;
+
+    private void AreaTile_Click(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.DataContext is ExpertAreaViewModel area) ViewModel.SelectArea(area);
+    }
+
     private void Copy_Click(object sender, RoutedEventArgs e)
     {
         if (ViewModel.BuildMarkdown() is not { } markdown) return;
         var package = new DataPackage();
         package.SetText(markdown);
         Clipboard.SetContent(package);
+        CopiedBar.Visibility = Visibility.Visible;
         CopiedBar.IsOpen = true;
     }
 
